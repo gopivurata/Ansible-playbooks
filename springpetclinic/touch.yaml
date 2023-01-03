@@ -1,0 +1,9 @@
+---
+- name: create sample file
+  hosts: all
+  become: no
+  tasks:
+    - name: create file
+      ansible.builtin.file:
+        path: /tmp/test.txt
+        state: touch
