@@ -193,6 +193,84 @@ wildfly.yaml
         state: started
         enabled: yes
         ---
+        
+with vars: centos-wildfly.yaml
+-------------------------------
+
+---
+- name: Install & Configure WildFly
+  hosts: all
+  become: yes
+  vars:
+    java_version : java-11-openjdk-devel
+    wildfly_user: wildfly #user-name and group-name same
+    wildfly_home: /opt/wildfly
+  tasks:
+    - name: Install openjdk11
+      ansible.builtin.yum:
+        name: "{{ java_version }}"
+        state: present
+        update_cache: yes
+    - name: creating group
+      ansible.builtin.group:
+        name: "{{ wildfly_user }}"
+        state: present
+    - name: creating user and add to group
+      ansible.builtin.user:
+        name: "{{ wildfly_user }}"
+        shell: /sbin/nologin
+        group: "{{ wildfly_user }}"
+        home: "{{ wildfly_home }}"
+        system: true
+        state: present
+    - name: Download the WildFly tar file
+      ansible.builtin.get_url:
+        url: https://download.jboss.org/wildfly/22.0.1.Final/wildfly-22.0.1.Final.tar.gz
+        dest: /tmp/wildfly-22.0.1.Final.tar.gz
+        mode: '777'
+    - name: Unarchive a file that is already on the remote machine
+      ansible.builtin.unarchive:
+        src: /tmp/wildfly-22.0.1.Final.tar.gz
+        dest: /tmp/
+        remote_src: yes
+    - name: copy files to user home directory
+      ansible.builtin.copy:
+        src: /tmp/wildfly-22.0.1.Final/
+        dest: "{{ wildfly_home }}"
+        owner: "{{ wildfly_user }}"
+        group: "{{ wildfly_user }}"
+        remote_src: yes
+    - name: Creating a directory
+      ansible.builtin.file:
+        path: /etc/wildfly
+        state: directory
+        mode: '777'
+    - name: copy the wildfly.conf
+      ansible.builtin.copy:
+        src: /opt/wildfly/docs/contrib/scripts/systemd/wildfly.conf
+        dest: /etc/wildfly/
+        remote_src: yes
+    - name: copy the launch.sh
+      ansible.builtin.copy:
+        src: /opt/wildfly/docs/contrib/scripts/systemd/launch.sh
+        dest: /opt/wildfly/bin/
+        remote_src: yes
+    - name: permissions given to all sh files
+      ansible.builtin.file:
+        path: /opt/wildfly/bin/
+        owner: "{{ wildfly_user }}"
+        mode: '777'
+        recurse: yes
+    - name:  copy the wildfly.service
+      ansible.builtin.copy:
+        src: /opt/wildfly/docs/contrib/scripts/systemd/wildfly.service
+        dest: /etc/systemd/system/
+        remote_src: yes
+    - name: wildfly service unit is running and Enable
+      ansible.builtin.systemd:
+        name: "{{ wildfly_user }}"
+        state: started
+        enabled: yes
 
 * Now access the wildfly application : `<node-public_ip>@8080`
 
