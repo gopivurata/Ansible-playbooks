@@ -46,7 +46,7 @@
    * deploy the application on node to use `ansible-playbook`
       * php.yaml:
        ----------
-       ---
+     ```
         - name: deploy the php
           hosts: all
           become: yes
