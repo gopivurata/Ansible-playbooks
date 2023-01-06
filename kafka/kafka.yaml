@@ -1,0 +1,40 @@
+---
+- name: apache Kafka installing
+  hosts: all
+  become: yes
+  tasks:
+    - name: update the system and install java-11
+      ansible.builtin.apt:
+        name: openjdk-11-jdk
+        state: present
+        update_cache: yes
+    - name: download the apache kafka tgz file
+      ansible.builtin.get_url:
+        url: https://downloads.apache.org/kafka/3.3.1/kafka_2.13-3.3.1.tgz
+        dest: /home/devops
+        mode: '777'
+    - name: extract the downloaded file
+      ansible.builtin.unarchive:
+        src: /home/devops/kafka_2.13-3.3.1.tgz
+        dest: /usr/local/kafka/
+        remote_src: yes
+    - name: copy the zookeeper service file
+      ansible.builtin.copy:
+        src: /home/devops/zookeeper.service
+        dest: /etc/systemd/system/zookeeper.service
+        follow: yes
+    - name: copy the kafka service file
+      ansible.builtin.copy:
+        src: /home/devops/kafka.service
+        dest: /etc/systemd/system/kafka.service
+        follow: yes
+    - name: reload the systemd daemon and start the zookeeper service
+      ansible.builtin.systemd:
+        state: restarted
+        daemon_reload: yes
+        name: zookeeper.service
+    - name: start and enable the kafka service
+      ansible.builtin.systemd:
+        name: kafka.service
+        state: started
+        enabled: yes
