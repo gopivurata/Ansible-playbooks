@@ -1,0 +1,56 @@
+---
+- name: installing HaProxy
+  become: yes
+  hosts: all
+  tasks:
+    - name: install apache2 and update
+      ansible.builtin.apt:
+          name: apache2
+          state: present
+          update_cache: yes
+      when: ansible_facts["hostname"] != "ip-172-31-21-93"
+    - name: copy the file
+      ansible.builtin.copy:
+        src: one.html
+        dest: /var/www/html/one.html
+      when: ansible_facts["hostname"] == "ip-172-31-30-212"
+    - name: copy the file
+      ansible.builtin.copy:
+        src: two.html
+        dest: /var/www/html/two.html
+      when: ansible_facts["hostname"] == "ip-172-31-21-13"
+    - name: Copy using inline content
+      ansible.builtin.copy:
+        content: HAproxy 172.31.18.79
+        dest: /etc/hosts
+      when: ansible_facts["hostname"] != "ip-172-31-21-93"
+    - name: restart the server
+      ansible.builtin.systemd:
+        name: apache2
+        state: started
+        enabled: yes
+      when: ansible_facts["hostname"] != "ip-172-31-21-93"
+    - name: copy the file
+      ansible.builtin.copy:
+        src: hostfile
+        dest: /etc/hosts
+      when: ansible_facts["hostname"] == "ip-172-31-21-93"
+    - name: update and install haproxy
+      ansible.builtin.apt:
+          name: haproxy
+          update_cache: yes
+          state: present
+      when: ansible_facts["hostname"] == "ip-172-31-21-93"
+    - name: copy the file
+      ansible.builtin.blockinfile:
+        path: /etc/haproxy/haproxy.cfg
+        block: "{{lookup('file', 'new_config')}}"
+        create: yes
+        state: present
+      when: ansible_facts["hostname"] == "ip-172-31-21-93"
+    - name: restart the server
+      ansible.builtin.systemd:
+        name: haproxy
+        state: started
+        enabled: yes
+      when: ansible_facts["hostname"] == "ip-172-31-21-93"

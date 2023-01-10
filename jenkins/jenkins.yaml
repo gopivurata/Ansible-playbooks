@@ -1,0 +1,23 @@
+---
+- name: deploying jenkins war file
+  hosts: all
+  become: yes
+  tasks:
+    - name: Update the repository cache and installing java
+      ansible.builtin.apt:
+        name: openjdk-11-jdk
+        state: present
+        update_cache: yes
+    - name: Downloading jenkins war file
+      ansible.builtin.get_url:
+        url: https://updates.jenkins.io/download/war/2.384/jenkins.war
+        dest: /home/web/
+    - name: Copying the jenkins service file to remote machine
+      ansible.builtin.copy:
+        src: jenkins.service
+        dest: /etc/systemd/system/jenkins.service
+    - name: restart the jenkins service
+      ansible.builtin.systemd:
+        state: restarted
+        daemon_reload: yes
+        name: jenkins.service
