@@ -7,6 +7,8 @@
     `sudo vi /etc/systemd/system/jenkins.service`
   * after then start service  `sudo systemctl restart jenkins.service`
 
+  
+
 * Deploying jenkins war file on remote machines using `ansible-playbook`:
 --------------------------------------------------------------------------
  * update and openjdk-11 installing: we want install jenkins need java, jenkins is a Java web 
